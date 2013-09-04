@@ -735,11 +735,18 @@ static __strong NSData *CRLFCRLF;
 
 - (void)handlePing:(NSData *)pingData;
 {
+    SRFastLog(@"Received ping");
+
     // Need to pingpong this off _callbackQueue first to make sure messages happen in order
     [self _performDelegateBlock:^{
         dispatch_async(_workQueue, ^{
             [self _sendFrameWithOpcode:SROpCodePong data:pingData];
         });
+    }];
+
+    // Notify client next
+    [self _performDelegateBlock:^{
+        [self.delegate webSocket:self didReceivePing:ping];
     }];
 }
 
