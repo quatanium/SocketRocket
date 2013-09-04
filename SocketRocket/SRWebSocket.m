@@ -746,7 +746,7 @@ static __strong NSData *CRLFCRLF;
 
     // Notify client next
     [self _performDelegateBlock:^{
-        [self.delegate webSocket:self didReceivePing:ping];
+        [self.delegate webSocket:self didReceivePing:pingData];
     }];
 }
 
