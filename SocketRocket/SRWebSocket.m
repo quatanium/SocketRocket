@@ -124,7 +124,8 @@ static NSString *newSHA1String(const char *bytes, size_t length) {
     assert(length <= UINT32_MAX);
     CC_SHA1(bytes, (CC_LONG)length, md);
     
-    return [[NSData dataWithBytes:md length:CC_SHA1_DIGEST_LENGTH] base64Encoding];
+    NSData *data = [NSData dataWithBytes:md length:CC_SHA1_DIGEST_LENGTH];
+    return floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1 ? [data base64Encoding] : [data base64EncodedStringWithOptions:0];
 }
 
 @implementation NSData (SRWebSocket)
@@ -481,7 +482,7 @@ static __strong NSData *CRLFCRLF;
         
     NSMutableData *keyBytes = [[NSMutableData alloc] initWithLength:16];
     SecRandomCopyBytes(kSecRandomDefault, keyBytes.length, keyBytes.mutableBytes);
-    _secKey = keyBytes.base64Encoding;
+    _secKey = floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1 ? [keyBytes base64Encoding] : [keyBytes base64EncodedStringWithOptions:0];
     assert([_secKey length] == 24);
     
     CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Upgrade"), CFSTR("websocket"));
