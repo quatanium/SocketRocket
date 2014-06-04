@@ -49,7 +49,7 @@
     self.isExecuting = YES;
 }
 
-- (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
+- (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(SRStatusCode)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
 {
     [self willChangeValueForKey:@"isExecuting"];
     [self willChangeValueForKey:@"isFinished"];

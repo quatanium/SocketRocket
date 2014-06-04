@@ -128,7 +128,7 @@ You implement this
 
   - (void)webSocketDidOpen:(SRWebSocket *)webSocket;
   - (void)webSocket:(SRWebSocket *)webSocket didFailWithError:(NSError *)error;
-  - (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
+  - (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(SRStatusCode)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
 
   @end
 

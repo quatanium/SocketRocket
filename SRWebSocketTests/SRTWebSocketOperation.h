@@ -20,7 +20,7 @@
 @property (nonatomic, readonly, retain) NSError *error;
 
 // We override these methods.  Please call super
-- (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
+- (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(SRStatusCode)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
 - (void)webSocket:(SRWebSocket *)webSocket didFailWithError:(NSError *)error;
 
 @end

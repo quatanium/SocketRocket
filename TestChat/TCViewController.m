@@ -128,7 +128,7 @@
     [self.tableView scrollRectToVisible:self.tableView.tableFooterView.frame animated:YES];
 }
 
-- (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
+- (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(SRStatusCode)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
 {
     NSLog(@"WebSocket closed");
     self.title = @"Connection Closed! (see logs)";

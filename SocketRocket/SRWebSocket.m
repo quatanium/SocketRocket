@@ -570,7 +570,7 @@ static __strong NSData *CRLFCRLF;
 
 - (void)close;
 {
-    [self closeWithCode:1000 reason:nil];
+    [self closeWithCode:SRStatusCodeNormal reason:nil];
 }
 
 - (void)closeWithCode:(SRStatusCode)code reason:(NSString *)reason;
@@ -777,7 +777,7 @@ static inline BOOL closeCodeIsValid(int closeCode) {
     [self assertOnWorkQueue];
     
     if (self.readyState == SR_OPEN) {
-        [self closeWithCode:1000 reason:nil];
+        [self closeWithCode:SRStatusCodeNormal reason:nil];
     }
     dispatch_async(_workQueue, ^{
         [self _disconnect];
