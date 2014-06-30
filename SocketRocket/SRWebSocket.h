@@ -40,6 +40,7 @@ typedef enum {
 @class SRWebSocket;
 
 extern NSString *const SRWebSocketErrorDomain;
+extern NSString *const SRWebSocketStatusCodeKey;
 
 #pragma mark - SRWebSocketDelegate
 

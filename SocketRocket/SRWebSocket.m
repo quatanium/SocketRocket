@@ -135,6 +135,7 @@ static NSString *newSHA1String(const char *bytes, size_t length) {
 @end
 
 NSString *const SRWebSocketErrorDomain = @"SRWebSocketErrorDomain";
+NSString *const SRWebSocketStatusCodeKey = @"kSRWebSocketStatusCodeKey";
 
 // Returns number of bytes consumed. Returning 0 means you didn't match.
 // Sends bytes to callback handler;
@@ -407,7 +408,10 @@ static __strong NSData *CRLFCRLF;
     
     if (responseCode >= 400) {
         SRFastLog(@"Request failed with response code %d", responseCode);
-        [self _failWithError:[NSError errorWithDomain:@"org.lolrus.SocketRocket" code:2132 userInfo:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"received bad response code from server %ld", (long)responseCode] forKey:NSLocalizedDescriptionKey]]];
+        [self _failWithError:[NSError errorWithDomain:@"org.lolrus.SocketRocket" code:2132 userInfo:@{
+                                                                                                      NSLocalizedDescriptionKey: [NSString stringWithFormat:@"received bad response code from server %ld", (long)responseCode],
+                                                                                                      SRWebSocketStatusCodeKey: @(responseCode)
+                                                                                                      }]];
         return;
 
     }
