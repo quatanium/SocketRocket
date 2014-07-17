@@ -636,17 +636,16 @@ static __strong NSData *CRLFCRLF;
     dispatch_async(_workQueue, ^{
         if (self.readyState != SR_CLOSED) {
             _failed = YES;
+            self.readyState = SR_CLOSED;
+            [self _scheduleCleanup];
+
+            SRFastLog(@"Failing with error %@", error.localizedDescription);
             [self _performDelegateBlock:^{
                 if ([self.delegate respondsToSelector:@selector(webSocket:didFailWithError:)]) {
                     [self.delegate webSocket:self didFailWithError:error];
                 }
             }];
 
-            self.readyState = SR_CLOSED;
-            [self _scheduleCleanup];
-
-            SRFastLog(@"Failing with error %@", error.localizedDescription);
-            
             [self _disconnect];
         }
     });
@@ -1055,6 +1054,9 @@ static const uint8_t SRPayloadLenMask   = 0x7F;
         }
         
         if (!_failed) {
+            // Make sure state is closed
+            self.readyState = SR_CLOSED;
+
             [self _performDelegateBlock:^{
                 if ([self.delegate respondsToSelector:@selector(webSocket:didCloseWithCode:reason:wasClean:)]) {
                     [self.delegate webSocket:self didCloseWithCode:_closeCode reason:_closeReason wasClean:YES];
