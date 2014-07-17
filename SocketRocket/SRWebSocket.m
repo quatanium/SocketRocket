@@ -45,7 +45,7 @@
 #endif
 
 #if !__has_feature(objc_arc) 
-#error SocketRocket muust be compiled with ARC enabled
+#error SocketRocket must be compiled with ARC enabled
 #endif
 
 
@@ -573,7 +573,7 @@ static __strong NSData *CRLFCRLF;
     [self closeWithCode:SRStatusCodeNormal reason:nil];
 }
 
-- (void)closeWithCode:(SRStatusCode)code reason:(NSString *)reason;
+- (void)closeWithCode:(NSInteger)code reason:(NSString *)reason;
 {
     assert(code);
     dispatch_async(_workQueue, ^{
