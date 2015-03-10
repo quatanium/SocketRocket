@@ -361,7 +361,7 @@ static __strong NSData *CRLFCRLF;
 
     _selfRetain = self;
     
-    [self _connect];
+    [self _sr_connect];
 }
 
 // Calls block on delegate queue
@@ -551,7 +551,7 @@ static __strong NSData *CRLFCRLF;
     _outputStream.delegate = self;
 }
 
-- (void)_connect;
+- (void)_sr_connect;
 {
     if (!_scheduledRunloops.count) {
         [self scheduleInRunLoop:[NSRunLoop SR_networkRunLoop] forMode:NSDefaultRunLoopMode];
