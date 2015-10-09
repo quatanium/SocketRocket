@@ -218,7 +218,7 @@ typedef void (^data_callback)(SRWebSocket *webSocket,  NSData *data);
     BOOL _secure;
     NSURLRequest *_urlRequest;
 
-    CFHTTPMessageRef _receivedHTTPHeaders;
+    
     
     BOOL _sentClose;
     BOOL _didFail;
@@ -361,7 +361,7 @@ static __strong NSData *CRLFCRLF;
 
     _selfRetain = self;
     
-    [self _sr_connect];
+    [self openConnection];
 }
 
 // Calls block on delegate queue
@@ -477,7 +477,16 @@ static __strong NSData *CRLFCRLF;
     SecRandomCopyBytes(kSecRandomDefault, keyBytes.length, keyBytes.mutableBytes);
     _secKey = floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_6_1 ? [keyBytes base64Encoding] : [keyBytes base64EncodedStringWithOptions:0];
     assert([_secKey length] == 24);
-    
+
+    // Apply cookies if any have been provided
+    NSDictionary * cookies = [NSHTTPCookie requestHeaderFieldsWithCookies:[self requestCookies]];
+    for (NSString * cookieKey in cookies) {
+        NSString * cookieValue = [cookies objectForKey:cookieKey];
+        if ([cookieKey length] && [cookieValue length]) {
+            CFHTTPMessageSetHeaderFieldValue(request, (__bridge CFStringRef)cookieKey, (__bridge CFStringRef)cookieValue);
+        }
+    }
+ 
     CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Upgrade"), CFSTR("websocket"));
     CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Connection"), CFSTR("Upgrade"));
     CFHTTPMessageSetHeaderFieldValue(request, CFSTR("Sec-WebSocket-Key"), (__bridge CFStringRef)_secKey);
@@ -551,7 +560,7 @@ static __strong NSData *CRLFCRLF;
     _outputStream.delegate = self;
 }
 
-- (void)_sr_connect;
+- (void)openConnection;
 {
     if (!_scheduledRunloops.count) {
         [self scheduleInRunLoop:[NSRunLoop SR_networkRunLoop] forMode:NSDefaultRunLoopMode];
@@ -598,7 +607,7 @@ static __strong NSData *CRLFCRLF;
         SRFastLog(@"Closing with code %d reason %@", code, reason);
         
         if (wasConnecting) {
-            [self _disconnect];
+            [self closeConnection];
             return;
         }
 
@@ -632,7 +641,7 @@ static __strong NSData *CRLFCRLF;
     [self _performDelegateBlock:^{
         [self closeWithCode:SRStatusCodeProtocolError reason:message];
         dispatch_async(_workQueue, ^{
-            [self _disconnect];
+            [self closeConnection];
         });
     }];
 }
@@ -652,7 +661,12 @@ static __strong NSData *CRLFCRLF;
                 }
             }];
 
-            [self _disconnect];
+            self.readyState = SR_CLOSED;
+            _selfRetain = nil;
+
+            SRFastLog(@"Failing with error %@", error.localizedDescription);
+            
+            [self closeConnection];
         }
     });
 }
@@ -801,11 +815,11 @@ static inline BOOL closeCodeIsValid(int closeCode) {
         [self closeWithCode:SRStatusCodeNormal reason:nil];
     }
     dispatch_async(_workQueue, ^{
-        [self _disconnect];
+        [self closeConnection];
     });
 }
 
-- (void)_disconnect;
+- (void)closeConnection;
 {
     [self assertOnWorkQueue];
     SRFastLog(@"Trying to disconnect");
@@ -832,7 +846,7 @@ static inline BOOL closeCodeIsValid(int closeCode) {
             if (str == nil && frameData) {
                 [self closeWithCode:SRStatusCodeInvalidUTF8 reason:@"Text frames must be valid UTF-8"];
                 dispatch_async(_workQueue, ^{
-                    [self _disconnect];
+                    [self closeConnection];
                 });
 
                 return;
@@ -1181,7 +1195,7 @@ static const char CRLFCRLFBytes[] = {'\r', '\n', '\r', '\n'};
     if (self.readyState >= SR_CLOSING) {
         dispatch_async(_workQueue, ^{
             _closeCode = SRStatusCodeNormal;
-            [self _disconnect];
+            [self closeConnection];
         });
         return didWork;
     }
@@ -1256,7 +1270,7 @@ static const char CRLFCRLFBytes[] = {'\r', '\n', '\r', '\n'};
                     if (valid_utf8_size == -1) {
                         [self closeWithCode:SRStatusCodeInvalidUTF8 reason:@"Text frames must be valid UTF-8"];
                         dispatch_async(_workQueue, ^{
-                            [self _disconnect];
+                            [self closeConnection];
                         });
                         return didWork;
                     } else {
@@ -1749,7 +1763,11 @@ static inline int32_t validate_dispatch_data_partial_string(NSData *data) {
     for (int i = 0; i < maxCodepointSize; i++) {
         NSString *str = [[NSString alloc] initWithBytesNoCopy:(char *)data.bytes length:data.length - i encoding:NSUTF8StringEncoding freeWhenDone:NO];
         if (str) {
+<<<<<<< HEAD
             return (int32_t)(data.length - i);
+=======
+            return (int32_t)data.length - i;
+>>>>>>> 21eaa2b7d1c8dc22ba64df5aa54a120f0b675afa
         }
     }
     
@@ -1805,8 +1823,22 @@ static NSRunLoop *networkRunLoop = nil;
         _runLoop = [NSRunLoop currentRunLoop];
         dispatch_group_leave(_waitGroup);
         
-        NSTimer *timer = [[NSTimer alloc] initWithFireDate:[NSDate distantFuture] interval:0.0 target:nil selector:nil userInfo:nil repeats:NO];
-        [_runLoop addTimer:timer forMode:NSDefaultRunLoopMode];
+        // Add an empty run loop source to prevent runloop from spinning.
+        CFRunLoopSourceContext sourceCtx = {
+            .version = 0,
+            .info = NULL,
+            .retain = NULL,
+            .release = NULL,
+            .copyDescription = NULL,
+            .equal = NULL,
+            .hash = NULL,
+            .schedule = NULL,
+            .cancel = NULL,
+            .perform = NULL
+        };
+        CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &sourceCtx);
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+        CFRelease(source);
         
         while ([_runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]) {
             
